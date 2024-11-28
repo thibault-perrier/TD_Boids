@@ -4,6 +4,7 @@ using UnityEngine;
 using Unity.Jobs;
 using UnityEngine.Jobs;
 using System.Threading.Tasks;
+using System;
 
 public class BoidManager : MonoBehaviour
 {
@@ -17,13 +18,20 @@ public class BoidManager : MonoBehaviour
     BoidData[] boidData;
     [SerializeField] private List<Transform> targets;
 
+    [SerializeField] private int _waveBoidNum = 0;
+
     void Start()
     {
         boids = FindObjectsOfType<Boid>();
 
+        // Parallel.For(0, boids.Length, i =>
+        // {
+        //     boids[i].Initialize(settings, targets[i % targets.Count]);
+        // });
+
         foreach (Boid b in boids)
         {
-            b.Initialize(settings, targets[Random.Range(0, targets.Count)]);
+            b.Initialize(settings, targets[UnityEngine.Random.Range(0, targets.Count)]);
         }
 
         int numBoids = boids.Length;
@@ -37,19 +45,65 @@ public class BoidManager : MonoBehaviour
         compute.SetFloat("avoidRadius", settings.avoidanceRadius);
     }
 
-    void Update() // TODO -> CREATE THE BOID DATA AND BUFFER IN START SO I CAN USE IT AGAIN AT NEXT FRAME
+    // void Update() // TODO -> CREATE THE BOID DATA AND BUFFER IN START SO I CAN USE IT AGAIN AT NEXT FRAME
+    // {
+    //     if (boids != null)
+    //     {
+    //         int numBoids = boids.Length;
+    //         Array.Clear(boidData, 0, boidData.Length);
+
+    //         for (int i = 0; i < numBoids; i++)
+    //         {
+    //             boidData[i].position = boids[i].position;
+    //             boidData[i].direction = boids[i].forward;
+    //             boidData[i].ToRender = 1;
+    //             boids[i].gameObject.SetActive(i < _waveBoidNum);
+    //         }
+
+    //         boidBuffer.SetData(boidData);
+    //         compute.SetBuffer(0, "boids", boidBuffer);
+
+    //         compute.Dispatch(0, threadGroups, 1, 1);
+
+    //         boidBuffer.GetData(boidData);
+
+    //         for (int i = 0; i < numBoids; ++i)
+    //         {
+    //             boids[i].avgFlockHeading = boidData[i].flockHeading;
+    //             boids[i].centreOfFlockmates = boidData[i].flockCentre;
+    //             boids[i].avgAvoidanceHeading = boidData[i].avoidanceHeading;
+    //             boids[i].numPerceivedFlockmates = boidData[i].numFlockmates;
+
+    //             boids[i].UpdateBoid();
+    //         }
+    //     }
+    // }
+
+    void Update()
     {
         if (boids != null)
         {
             int numBoids = boids.Length;
-            var boidData = new BoidData[numBoids];
 
             for (int i = 0; i < numBoids; i++)
             {
+                boids[i].avgFlockHeading = boidData[i].flockHeading;
+                boids[i].centreOfFlockmates = boidData[i].flockCentre;
+                boids[i].avgAvoidanceHeading = boidData[i].avoidanceHeading;
+                boids[i].numPerceivedFlockmates = boidData[i].numFlockmates;
+                boids[i].UpdateBoid();
+
+                // if (i == 0) Array.Clear(boidData, 0, boidData.Length);
+
                 boidData[i].position = boids[i].position;
                 boidData[i].direction = boids[i].forward;
+                boidData[i].flockHeading = default;
+                boidData[i].flockCentre = default;
+                boidData[i].avoidanceHeading = default;
+                boidData[i].numFlockmates = default;
+                boidData[i].ToRender = 1;
+                boids[i].gameObject.SetActive(i < _waveBoidNum);
             }
-
 
             boidBuffer.SetData(boidData);
             compute.SetBuffer(0, "boids", boidBuffer);
@@ -57,31 +111,6 @@ public class BoidManager : MonoBehaviour
             compute.Dispatch(0, threadGroups, 1, 1);
 
             boidBuffer.GetData(boidData);
-
-
-            Parallel.For(0, numBoids, i =>
-            {
-                boids[i].avgFlockHeading = boidData[i].flockHeading;
-                boids[i].centreOfFlockmates = boidData[i].flockCentre;
-                boids[i].avgAvoidanceHeading = boidData[i].avoidanceHeading;
-                boids[i].numPerceivedFlockmates = boidData[i].numFlockmates;
-            }
-            );
-
-            for (int i = 0; i < numBoids; ++i)
-            {
-                boids[i].UpdateBoid();
-            }
-
-            // for (int i = 0; i < numBoids; ++i)
-            // {
-            //     boids[i].avgFlockHeading = boidData[i].flockHeading;
-            //     boids[i].centreOfFlockmates = boidData[i].flockCentre;
-            //     boids[i].avgAvoidanceHeading = boidData[i].avoidanceHeading;
-            //     boids[i].numPerceivedFlockmates = boidData[i].numFlockmates;
-
-            //     boids[i].UpdateBoid();
-            // }
         }
     }
 
@@ -100,12 +129,13 @@ public class BoidManager : MonoBehaviour
         public Vector3 flockCentre;
         public Vector3 avoidanceHeading;
         public int numFlockmates;
+        public int ToRender;
 
         public static int Size
         {
             get
             {
-                return sizeof(float) * 3 * 5 + sizeof(int);
+                return sizeof(float) * 3 * 5 + sizeof(int) * 2;
             }
         }
     }

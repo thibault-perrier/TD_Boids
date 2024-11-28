@@ -23,7 +23,12 @@ public class Boid : MonoBehaviour
     Transform cachedTransform;
     Transform target;
     private Transform _objectiveTrans;
-    [SerializeField] private float _minDistForObjective;
+    [SerializeField] private const float _minDistForObjective = 1.5f;
+    [SerializeField] private const float _distForColl = 0.2f;
+
+
+    // Rendered
+    [HideInInspector] public int ToRender = 1;
 
     void Awake()
     {
@@ -41,7 +46,7 @@ public class Boid : MonoBehaviour
         forward = cachedTransform.forward;
 
         float startSpeed = (settings.minSpeed + settings.maxSpeed) / 2;
-        velocity = transform.forward * startSpeed;
+        velocity = cachedTransform.forward * startSpeed;
     }
 
     public void SetColour(Color col)
@@ -62,8 +67,12 @@ public class Boid : MonoBehaviour
 
             if (offsetToTarget.magnitude <= _minDistForObjective)
             {
-                if (target != _objectiveTrans)
-                    target = _objectiveTrans;
+                if (target == _objectiveTrans && offsetToTarget.magnitude <= _distForColl)
+                {
+                    ToRender = 0;
+                    return;
+                }
+                target = _objectiveTrans;
                 offsetToTarget = (target.position - position);
             }
 

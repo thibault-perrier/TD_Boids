@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Spawner : MonoBehaviour
 {
-
     public enum GizmoType { Never, SelectedOnly, Always }
 
     public Boid prefab;
@@ -13,12 +12,14 @@ public class Spawner : MonoBehaviour
     public Color colour;
     public GizmoType showSpawnRegion;
 
+    [SerializeField] private Transform _boidParentTrans;
+
     void Awake()
     {
         for (int i = 0; i < spawnCount; i++)
         {
             Vector3 pos = transform.position + Random.insideUnitSphere * spawnRadius;
-            Boid boid = Instantiate(prefab);
+            Boid boid = Instantiate(prefab, _boidParentTrans);
             boid.transform.position = pos;
             boid.transform.forward = Random.insideUnitSphere;
 
