@@ -8,6 +8,8 @@ using System;
 
 public class BoidManager : MonoBehaviour
 {
+    public static BoidManager Instance;
+
     const int threadGroupSize = 1024;
     int threadGroups;
 
@@ -16,9 +18,15 @@ public class BoidManager : MonoBehaviour
     Boid[] boids;
     ComputeBuffer boidBuffer;
     BoidData[] boidData;
+    public Dictionary<int, BoidData> AliveBoidData = new Dictionary<int, BoidData>();
     [SerializeField] private List<Transform> targets;
 
     [SerializeField] private int _waveBoidNum = 0;
+
+    void Awake()
+    {
+        if (Instance != null) Instance = this;
+    }
 
     void Start()
     {
