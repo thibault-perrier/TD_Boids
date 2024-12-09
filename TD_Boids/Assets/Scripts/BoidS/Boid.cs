@@ -63,13 +63,14 @@ public class Boid : MonoBehaviour
 
         if (target != null)
         {
-            Vector3 offsetToTarget = (target.position - position);
+            Vector3 offsetToTarget = target.position - position;
 
             if (offsetToTarget.magnitude <= _minDistForObjective)
             {
                 if (target == _objectiveTrans && offsetToTarget.magnitude <= _distForColl)
                 {
                     ToRender = 0;
+                    // Debug.Log("an alien has crashed into the target building");
                     return;
                 }
                 target = _objectiveTrans;
@@ -94,6 +95,7 @@ public class Boid : MonoBehaviour
             acceleration += seperationForce;
         }
 
+        //! This is the big performance hit per boid
         if (IsHeadingForCollision())
         {
             Vector3 collisionAvoidDir = ObstacleRays();
@@ -113,6 +115,7 @@ public class Boid : MonoBehaviour
         forward = dir;
     }
 
+    // TODO : OPTIMIZE COLLISION DETECTION
     bool IsHeadingForCollision()
     {
         RaycastHit hit;
@@ -124,6 +127,7 @@ public class Boid : MonoBehaviour
         return false;
     }
 
+    // TODO : OPTIMIZE COLLISION DETECTION
     Vector3 ObstacleRays()
     {
         Vector3[] rayDirections = BoidHelper.directions;
